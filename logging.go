@@ -46,7 +46,7 @@ func (l *LogLevel) Level() logging.Level {
 }
 
 func ConfigureLogging(module string, level logging.Level, stderr bool, logFile *os.File) *logging.Logger {
-	log := logging.MustGetLogger("sbusd")
+	log := logging.MustGetLogger(module)
 
 	backends := []logging.Backend{}
 
