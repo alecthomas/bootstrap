@@ -28,6 +28,11 @@ func LogLevelFlagParser(settings kingpin.Settings) (target *logging.Level) {
 	return
 }
 
+func LogLevelFlagParserVar(target *logging.Level, settings kingpin.Settings) {
+	settings.SetValue((*LogLevel)(target))
+	return
+}
+
 func (l *LogLevel) String() string {
 	return strings.ToLower(logging.Level(*l).String())
 }
@@ -65,8 +70,4 @@ func ConfigureLogging(module string, level logging.Level, stderr bool, logFile *
 	logging.SetFormatter(logging.MustStringFormatter("%{time:2006-01-02 15:04:05} %{shortfile} ▶ %{level:.1s} 0x%{id:x} %{message}"))
 	logging.SetLevel(level, module)
 	return log
-}
-
-func ConfigureLoggingFromFlags(module string) *logging.Logger {
-	return ConfigureLogging(module, *logLevelFlag, *logStderrFlag, *logFileFlag)
 }
