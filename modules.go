@@ -31,10 +31,11 @@ var (
 )
 
 type Options struct {
-	// Use $TEMPDIR/<appname>.pid by default.
-	UseSystemPIDFilePath bool
-	Logger               **logging.Logger
-	LogToStderrByDefault bool
+	UseSystemPIDFilePath bool             // Use $TEMPDIR/<appname>.pid by default.
+	PIDFile              string           // Path to PID file. Overrides previous option.
+	Logger               **logging.Logger // If logging is enabled, assign to this logger.
+	LogToStderrByDefault bool             // Log to stderr.
+	LogFile              string           // Log to this file.
 }
 
 func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) string {
@@ -48,7 +49,13 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 			panic("options.Logger must be provided for LoggingModule to be used")
 		}
 		LogLevelFlagParserVar(&logLevelFlag, app.Flag("log-level", "Set the default log level.").Default("info"))
-		app.Flag("log-file", "Enable file logging to PATH.").PlaceHolder("PATH").OpenFileVar(&logFileFlag, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		flag := app.Flag("log-file", "Enable file logging to PATH.")
+		if options.LogFile != "" {
+			flag.Default(options.LogFile)
+		} else {
+			flag.PlaceHolder("PATH")
+		}
+		flag.OpenFileVar(&logFileFlag, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		value := "false"
 		if options.LogToStderrByDefault {
 			value = "true"
@@ -61,11 +68,11 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 	}
 
 	if flags&PIDFileModule != 0 {
-		flag := app.Flag("pid-file", "Write PID file to PATH.").Short('p')
-		if options.UseSystemPIDFilePath {
-			flag.Default(filepath.Join(os.TempDir(), app.Name+".pid"))
+		path := options.PIDFile
+		if options.UseSystemPIDFilePath && path == "" {
+			path = filepath.Join(os.TempDir(), app.Name+".pid")
 		}
-		flag.OpenFileVar(&pidFileFlag, os.O_CREATE|os.O_RDWR, 0600)
+		app.Flag("pid-file", "Write PID file to PATH.").Short('p').Default(path).OpenFileVar(&pidFileFlag, os.O_CREATE|os.O_RDWR, 0600)
 	}
 	if flags&DaemonizeModule != 0 {
 		app.Flag("daemonize", "Daemonize the process.").Short('d').BoolVar(&daemonizeFlag)
