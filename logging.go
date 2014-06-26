@@ -50,9 +50,7 @@ func (l *LogLevel) Level() logging.Level {
 	return logging.Level(*l)
 }
 
-func ConfigureLogging(module string, level logging.Level, stderr bool, logFile *os.File) *logging.Logger {
-	log := logging.MustGetLogger(module)
-
+func ConfigureLogging(level logging.Level, format string, stderr bool, logFile *os.File) {
 	backends := []logging.Backend{}
 
 	if stderr {
@@ -67,7 +65,6 @@ func ConfigureLogging(module string, level logging.Level, stderr bool, logFile *
 	}
 
 	logging.SetBackend(backends...)
-	logging.SetFormatter(logging.MustStringFormatter("%{time:2006-01-02 15:04:05} %{shortfile} ▶ %{level:.1s} 0x%{id:x} %{message}"))
-	logging.SetLevel(level, module)
-	return log
+	logging.SetFormatter(logging.MustStringFormatter(format))
+	logging.SetLevel(level, "")
 }

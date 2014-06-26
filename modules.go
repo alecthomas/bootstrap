@@ -22,20 +22,20 @@ const (
 
 var (
 	logLevelFlag  logging.Level
+	logFormatFlag string
 	logFileFlag   *os.File
 	logStderrFlag bool
 	DebugFlag     bool
-
 	daemonizeFlag bool
 	pidFileFlag   *os.File
 )
 
 type Options struct {
-	UseSystemPIDFilePath bool             // Use $TEMPDIR/<appname>.pid by default.
-	PIDFile              string           // Path to PID file. Overrides previous option.
-	Logger               **logging.Logger // If logging is enabled, assign to this logger.
-	LogToStderrByDefault bool             // Log to stderr.
-	LogFile              string           // Log to this file.
+	UseSystemPIDFilePath bool   // Use $TEMPDIR/<appname>.pid by default.
+	PIDFile              string // Path to PID file. Overrides previous option.
+	LogToStderrByDefault bool   // Log to stderr.
+	LogFile              string // Log to this file.
+	LogFormat            string // Log format (from go-logging).
 }
 
 func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) string {
@@ -43,12 +43,26 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 		options = &Options{}
 	}
 
+	if options.LogFormat == "" {
+		options.LogFormat = "%{time:2006-01-02 15:04:05} %{shortfile} ▶ %{level:.1s} 0x%{id:x} %{message}"
+	}
+
+	if flags&PIDFileModule != 0 {
+		path := options.PIDFile
+		if options.UseSystemPIDFilePath && path == "" {
+			path = filepath.Join(os.TempDir(), app.Name+".pid")
+		}
+		app.Flag("pid-file", "Write PID file to PATH.").Short('p').Default(path).OpenFileVar(&pidFileFlag, os.O_CREATE|os.O_RDWR, 0600)
+	}
+
+	if flags&DaemonizeModule != 0 {
+		app.Flag("daemon", "Daemonize the process.").Short('d').BoolVar(&daemonizeFlag)
+	}
+
 	// Configure flags.
 	if flags&LoggingModule != 0 {
-		if options.Logger == nil {
-			panic("options.Logger must be provided for LoggingModule to be used")
-		}
 		LogLevelFlagParserVar(&logLevelFlag, app.Flag("log-level", "Set the default log level.").Default("info"))
+		app.Flag("log-format", "Set log output format (see go-logging).").Default(options.LogFormat).PlaceHolder("FORMAT").StringVar(&logFormatFlag)
 		flag := app.Flag("log-file", "Enable file logging to PATH.")
 		if options.LogFile != "" {
 			flag.Default(options.LogFile)
@@ -67,23 +81,14 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 		app.Flag("debug", "Enable debug mode.").BoolVar(&DebugFlag)
 	}
 
-	if flags&PIDFileModule != 0 {
-		path := options.PIDFile
-		if options.UseSystemPIDFilePath && path == "" {
-			path = filepath.Join(os.TempDir(), app.Name+".pid")
-		}
-		app.Flag("pid-file", "Write PID file to PATH.").Short('p').Default(path).OpenFileVar(&pidFileFlag, os.O_CREATE|os.O_RDWR, 0600)
-	}
-	if flags&DaemonizeModule != 0 {
-		app.Flag("daemonize", "Daemonize the process.").Short('d').BoolVar(&daemonizeFlag)
-	}
-
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// Initialise all the various modules.
 	if flags&PIDFileModule != 0 && pidFileFlag != nil {
 		_, err := AcquireLock(pidFileFlag)
-		kingpin.FatalIfError(err, "failed to acquire lock")
+		if err != nil {
+			kingpin.Fatalf("failed to acquire lock %s", pidFileFlag.Name())
+		}
 	}
 
 	if flags&DaemonizeModule != 0 && daemonizeFlag {
@@ -96,7 +101,7 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 	}
 
 	if flags&LoggingModule != 0 {
-		*options.Logger = ConfigureLogging(app.Name, logLevelFlag, logStderrFlag, logFileFlag)
+		ConfigureLogging(logLevelFlag, logFormatFlag, logStderrFlag, logFileFlag)
 	}
 
 	return command
