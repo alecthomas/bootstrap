@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/alecthomas/go-logging"
+	"github.com/op/go-logging"
 	"github.com/alecthomas/kingpin"
 )
 

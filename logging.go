@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alecthomas/go-logging"
+	"github.com/op/go-logging"
 	"github.com/alecthomas/kingpin"
 )
 
