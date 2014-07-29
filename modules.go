@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/op/go-logging"
 	"github.com/alecthomas/kingpin"
+	"github.com/op/go-logging"
 )
 
 type ModuleFlags int
@@ -44,7 +44,7 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 	}
 
 	if options.LogFormat == "" {
-		options.LogFormat = "%{time:2006-01-02 15:04:05} %{shortfile} ▶ %{level:.1s} 0x%{id:x} %{message}"
+		options.LogFormat = "%{time:2006-01-02 15:04:05} %{module}/%{shortfile} ▶ %{level:.1s} 0x%{id:x} %{message}"
 	}
 
 	if flags&PIDFileModule != 0 {
