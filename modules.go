@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/alecthomas/kingpin"
-	"github.com/op/go-logging"
+	"github.com/alecthomas/go-logging"
 )
 
 type ModuleFlags int
