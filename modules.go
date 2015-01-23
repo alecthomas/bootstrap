@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/alecthomas/kingpin"
 	"github.com/alecthomas/go-logging"
+	"github.com/alecthomas/kingpin"
 )
 
 type ModuleFlags int
@@ -81,7 +81,9 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 		app.Flag("debug", "Enable debug mode.").BoolVar(&DebugFlag)
 	}
 
-	command := kingpin.MustParse(app.Parse(os.Args[1:]))
+	args, err := kingpin.ExpandArgsFromFiles(os.Args[1:])
+	kingpin.FatalIfError(err, "failed to expand flags from files")
+	command := kingpin.MustParse(app.Parse(args))
 
 	// Initialise all the various modules.
 	if flags&PIDFileModule != 0 && pidFileFlag != nil {
