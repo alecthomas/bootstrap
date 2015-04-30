@@ -37,7 +37,7 @@ type Options struct {
 }
 
 // Bootstrap the application.
-func Bootstrap(app *kingpin.Application, log *log15.Logger, flags ModuleFlags, options *Options) string {
+func Bootstrap(app *kingpin.Application, log log15.Logger, flags ModuleFlags, options *Options) string {
 	if options == nil {
 		options = &Options{}
 	}

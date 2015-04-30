@@ -48,7 +48,7 @@ func (l *LogLevel) Level() log15.Lvl {
 	return log15.Lvl(*l)
 }
 
-func ConfigureLogging(log *log15.Logger, level log15.Lvl, stderr bool, logFile string) {
+func ConfigureLogging(log log15.Logger, level log15.Lvl, stderr bool, logFile string) {
 	backends := []log15.Handler{}
 
 	if stderr {
@@ -59,5 +59,5 @@ func ConfigureLogging(log *log15.Logger, level log15.Lvl, stderr bool, logFile s
 		backends = append(backends, log15.Must.FileHandler(logFile, log15.LogfmtFormat()))
 	}
 
-	(*log).SetHandler(log15.LvlFilterHandler(level, log15.MultiHandler(backends...)))
+	log.SetHandler(log15.LvlFilterHandler(level, log15.MultiHandler(backends...)))
 }
