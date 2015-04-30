@@ -26,7 +26,7 @@ import (
 	"os"
 	"syscall"
 
-	"bitbucket.org/kardianos/osext"
+	"github.com/kardianos/osext"
 )
 
 // Detach from controling terminal and run in the background as system daemon.
