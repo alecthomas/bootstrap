@@ -28,6 +28,8 @@ var (
 	DebugFlag     bool
 	daemonizeFlag bool
 	pidFileFlag   *os.File
+
+	configured = false
 )
 
 type Options struct {
@@ -37,7 +39,8 @@ type Options struct {
 	LogFile              string // Log to this file.
 }
 
-func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) string {
+// Configure flags on app.
+func Configure(app *kingpin.Application, flags ModuleFlags, options *Options) {
 	if options == nil {
 		options = &Options{}
 	}
@@ -75,6 +78,15 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 		app.Flag("debug", "Enable debug mode.").BoolVar(&DebugFlag)
 	}
 
+	Log = log15.New("module", app.Name)
+
+	configured = true
+}
+
+func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) string {
+	if !configured {
+		Configure(app, flags, options)
+	}
 	args, err := kingpin.ExpandArgsFromFiles(os.Args[1:])
 	kingpin.FatalIfError(err, "failed to expand flags from files")
 	command := kingpin.MustParse(app.Parse(args))

@@ -61,6 +61,5 @@ func ConfigureLogging(level log15.Lvl, module string, stderr bool, logFile strin
 		backends = append(backends, log15.Must.FileHandler(logFile, log15.LogfmtFormat()))
 	}
 
-	Log = log15.New("module", module)
 	Log.SetHandler(log15.MultiHandler(backends...))
 }
