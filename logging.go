@@ -16,8 +16,6 @@ var (
 		"error":    log15.LvlError,
 		"critical": log15.LvlCrit,
 	}
-
-	Log log15.Logger
 )
 
 type LogLevel log15.Lvl
@@ -50,7 +48,7 @@ func (l *LogLevel) Level() log15.Lvl {
 	return log15.Lvl(*l)
 }
 
-func ConfigureLogging(level log15.Lvl, module string, stderr bool, logFile string) {
+func ConfigureLogging(log *log15.Logger, level log15.Lvl, stderr bool, logFile string) {
 	backends := []log15.Handler{}
 
 	if stderr {
@@ -61,5 +59,5 @@ func ConfigureLogging(level log15.Lvl, module string, stderr bool, logFile strin
 		backends = append(backends, log15.Must.FileHandler(logFile, log15.LogfmtFormat()))
 	}
 
-	Log.SetHandler(log15.MultiHandler(backends...))
+	(*log).SetHandler(log15.LvlFilterHandler(level, log15.MultiHandler(backends...)))
 }

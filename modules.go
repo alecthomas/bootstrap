@@ -22,14 +22,11 @@ const (
 
 var (
 	logLevelFlag  log15.Lvl
-	logFormatFlag string
 	logFileFlag   string
 	logStderrFlag bool
 	DebugFlag     bool
 	daemonizeFlag bool
 	pidFileFlag   *os.File
-
-	configured = false
 )
 
 type Options struct {
@@ -39,8 +36,8 @@ type Options struct {
 	LogFile              string // Log to this file.
 }
 
-// Configure flags on app.
-func Configure(app *kingpin.Application, flags ModuleFlags, options *Options) {
+// Bootstrap the application.
+func Bootstrap(app *kingpin.Application, log *log15.Logger, flags ModuleFlags, options *Options) string {
 	if options == nil {
 		options = &Options{}
 	}
@@ -77,16 +74,6 @@ func Configure(app *kingpin.Application, flags ModuleFlags, options *Options) {
 	if flags&DebugModule != 0 {
 		app.Flag("debug", "Enable debug mode.").BoolVar(&DebugFlag)
 	}
-
-	Log = log15.New("module", app.Name)
-
-	configured = true
-}
-
-func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) string {
-	if !configured {
-		Configure(app, flags, options)
-	}
 	args, err := kingpin.ExpandArgsFromFiles(os.Args[1:])
 	kingpin.FatalIfError(err, "failed to expand flags from files")
 	command := kingpin.MustParse(app.Parse(args))
@@ -109,7 +96,7 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 	}
 
 	if flags&LoggingModule != 0 {
-		ConfigureLogging(logLevelFlag, app.Name, logStderrFlag, logFileFlag)
+		ConfigureLogging(log, logLevelFlag, logStderrFlag, logFileFlag)
 	}
 
 	return command
