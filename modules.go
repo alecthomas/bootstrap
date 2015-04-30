@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/alecthomas/go-logging"
-	"github.com/alecthomas/kingpin"
+	"gopkg.in/alecthomas/kingpin.v2-unstable"
+	"gopkg.in/inconshreveable/log15.v2"
 )
 
 type ModuleFlags int
@@ -21,9 +21,9 @@ const (
 )
 
 var (
-	logLevelFlag  logging.Level
+	logLevelFlag  log15.Lvl
 	logFormatFlag string
-	logFileFlag   *os.File
+	logFileFlag   string
 	logStderrFlag bool
 	DebugFlag     bool
 	daemonizeFlag bool
@@ -35,16 +35,11 @@ type Options struct {
 	PIDFile              string // Path to PID file. Overrides previous option.
 	LogToStderrByDefault bool   // Log to stderr.
 	LogFile              string // Log to this file.
-	LogFormat            string // Log format (from go-logging).
 }
 
 func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) string {
 	if options == nil {
 		options = &Options{}
-	}
-
-	if options.LogFormat == "" {
-		options.LogFormat = "%{time:2006-01-02 15:04:05} %{module}/%{shortfile} ▶ %{level:.1s} 0x%{id:x} %{message}"
 	}
 
 	if flags&PIDFileModule != 0 {
@@ -62,14 +57,13 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 	// Configure flags.
 	if flags&LoggingModule != 0 {
 		LogLevelFlagParserVar(&logLevelFlag, app.Flag("log-level", "Set the default log level.").Default("info"))
-		app.Flag("log-format", "Set log output format (see go-logging).").Default(options.LogFormat).PlaceHolder("FORMAT").StringVar(&logFormatFlag)
 		flag := app.Flag("log-file", "Enable file logging to PATH.")
 		if options.LogFile != "" {
 			flag.Default(options.LogFile)
 		} else {
 			flag.PlaceHolder("PATH")
 		}
-		flag.OpenFileVar(&logFileFlag, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		flag.StringVar(&logFileFlag)
 		value := "false"
 		if options.LogToStderrByDefault {
 			value = "true"
@@ -103,7 +97,7 @@ func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) st
 	}
 
 	if flags&LoggingModule != 0 {
-		ConfigureLogging(logLevelFlag, logFormatFlag, logStderrFlag, logFileFlag)
+		ConfigureLogging(logLevelFlag, app.Name, logStderrFlag, logFileFlag)
 	}
 
 	return command

@@ -2,39 +2,39 @@ package util
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/alecthomas/go-logging"
-	"github.com/alecthomas/kingpin"
+	"gopkg.in/alecthomas/kingpin.v2-unstable"
+	"gopkg.in/inconshreveable/log15.v2"
 )
 
 var (
-	logLevels = map[string]logging.Level{
-		"debug":    logging.DEBUG,
-		"info":     logging.INFO,
-		"notice":   logging.NOTICE,
-		"warning":  logging.WARNING,
-		"error":    logging.ERROR,
-		"critical": logging.CRITICAL,
+	logLevels = map[string]log15.Lvl{
+		"debug":    log15.LvlDebug,
+		"info":     log15.LvlInfo,
+		"warning":  log15.LvlWarn,
+		"error":    log15.LvlError,
+		"critical": log15.LvlCrit,
 	}
+
+	Log log15.Logger
 )
 
-type LogLevel logging.Level
+type LogLevel log15.Lvl
 
-func LogLevelFlagParser(settings kingpin.Settings) (target *logging.Level) {
-	target = new(logging.Level)
+func LogLevelFlagParser(settings kingpin.Settings) (target *log15.Lvl) {
+	target = new(log15.Lvl)
 	settings.SetValue((*LogLevel)(target))
 	return
 }
 
-func LogLevelFlagParserVar(target *logging.Level, settings kingpin.Settings) {
+func LogLevelFlagParserVar(target *log15.Lvl, settings kingpin.Settings) {
 	settings.SetValue((*LogLevel)(target))
 	return
 }
 
 func (l *LogLevel) String() string {
-	return strings.ToLower(logging.Level(*l).String())
+	return strings.ToLower(log15.Lvl(*l).String())
 }
 
 func (l *LogLevel) Set(v string) error {
@@ -46,25 +46,21 @@ func (l *LogLevel) Set(v string) error {
 	return nil
 }
 
-func (l *LogLevel) Level() logging.Level {
-	return logging.Level(*l)
+func (l *LogLevel) Level() log15.Lvl {
+	return log15.Lvl(*l)
 }
 
-func ConfigureLogging(level logging.Level, format string, stderr bool, logFile *os.File) {
-	backends := []logging.Backend{}
+func ConfigureLogging(level log15.Lvl, module string, stderr bool, logFile string) {
+	backends := []log15.Handler{}
 
 	if stderr {
-		logBackend := logging.NewLogBackend(os.Stderr, "", 0)
-		logBackend.Color = true
-		backends = append(backends, logBackend)
+		backends = append(backends, log15.StderrHandler)
 	}
 
-	if logFile != nil {
-		fileLogBackend := logging.NewLogBackend(logFile, "", 0)
-		backends = append(backends, fileLogBackend)
+	if logFile != "" {
+		backends = append(backends, log15.Must.FileHandler(logFile, log15.LogfmtFormat()))
 	}
 
-	logging.SetBackend(backends...)
-	logging.SetFormatter(logging.MustStringFormatter(format))
-	logging.SetLevel(level, "")
+	Log = log15.New("module", module)
+	Log.SetHandler(log15.MultiHandler(backends...))
 }
