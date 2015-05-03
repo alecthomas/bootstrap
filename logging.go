@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alecthomas/kingpin"
 	"github.com/alecthomas/log15"
+	"gopkg.in/alecthomas/kingpin.v2-unstable"
 )
 
 type LogLevel log15.Lvl
