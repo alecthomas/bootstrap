@@ -4,18 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"gopkg.in/alecthomas/kingpin.v2-unstable"
+	"github.com/alecthomas/kingpin"
 	"github.com/alecthomas/log15"
-)
-
-var (
-	logLevels = map[string]log15.Lvl{
-		"debug":    log15.LvlDebug,
-		"info":     log15.LvlInfo,
-		"warning":  log15.LvlWarn,
-		"error":    log15.LvlError,
-		"critical": log15.LvlCrit,
-	}
 )
 
 type LogLevel log15.Lvl
@@ -36,8 +26,8 @@ func (l *LogLevel) String() string {
 }
 
 func (l *LogLevel) Set(v string) error {
-	level, ok := logLevels[v]
-	if !ok {
+	level, err := log15.LvlFromString(v)
+	if err != nil {
 		return fmt.Errorf("invalid log level '%s'", v)
 	}
 	*l = LogLevel(level)
