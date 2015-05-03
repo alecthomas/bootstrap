@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"gopkg.in/alecthomas/kingpin.v2-unstable"
-	"gopkg.in/inconshreveable/log15.v2"
+	"github.com/alecthomas/log15"
 )
 
 type ModuleFlags int
