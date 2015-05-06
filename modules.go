@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/alecthomas/kingpin.v2-unstable"
 	"github.com/alecthomas/log15"
+	"gopkg.in/alecthomas/kingpin.v2-unstable"
 )
 
 type ModuleFlags int
@@ -37,7 +37,7 @@ type Options struct {
 }
 
 // Bootstrap the application.
-func Bootstrap(app *kingpin.Application, log log15.Logger, flags ModuleFlags, options *Options) string {
+func Bootstrap(app *kingpin.Application, flags ModuleFlags, options *Options) string {
 	if options == nil {
 		options = &Options{}
 	}
@@ -96,7 +96,7 @@ func Bootstrap(app *kingpin.Application, log log15.Logger, flags ModuleFlags, op
 	}
 
 	if flags&LoggingModule != 0 {
-		ConfigureLogging(log, logLevelFlag, logStderrFlag, logFileFlag)
+		ConfigureLogging(logLevelFlag, logStderrFlag, logFileFlag)
 	}
 
 	return command
