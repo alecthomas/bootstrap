@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"syscall"
 )
@@ -17,6 +18,7 @@ func AcquireLock(file *os.File) (*LockFile, error) {
 		file.Close()
 		return nil, err
 	}
+	fmt.Fprintf(file, "%d\n", os.Getpid())
 	return &LockFile{file}, nil
 }
 
