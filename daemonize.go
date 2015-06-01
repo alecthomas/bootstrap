@@ -20,7 +20,7 @@
 
 // Package daemonize provides the Daemonize method which allows a go program to run
 // as a unix daemon
-package util
+package bootstrap
 
 import (
 	"os"

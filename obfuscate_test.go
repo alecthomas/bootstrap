@@ -1,4 +1,4 @@
-package util
+package bootstrap
 
 import (
 	"github.com/stretchr/testify/assert"
