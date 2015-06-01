@@ -3,9 +3,8 @@
 The functionality is split up into "modules", activated with a bitmask.
 
 ```go
-log := log15.New()
 app := kingpin.New("app", "Description.")
-util.Bootstrap(app, log, util.LoggingModule|util.DebugModule|util.PIDFileModule|util.DaemonizeModule, &util.Options{
+util.Bootstrap(app, util.LoggingModule|util.DebugModule|util.PIDFileModule|util.DaemonizeModule, &util.Options{
 		LogToStderrByDefault: true,
 		UseSystemPIDFilePath: true,
 })

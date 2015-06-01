@@ -10,8 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alecthomas/colour"
-	"github.com/alecthomas/log15"
+	"github.com/op/go-logging"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -20,96 +19,65 @@ const (
 	timeFormat  = "15:04:05"
 )
 
-type LogLevel log15.Lvl
-
-type ConsoleLogHandler struct {
-	w colour.Printer
-}
-
-func NewConsoleLogHandler(w io.Writer) log15.Handler {
-	return &ConsoleLogHandler{colour.TTY(w)}
-}
-
-func (c *ConsoleLogHandler) Log(r *log15.Record) error {
-	cf := ""
-	switch r.Lvl {
-	case log15.LvlCrit:
-		cf = "^B^1"
-	case log15.LvlError:
-		cf = "^1"
-	case log15.LvlWarn:
-		cf = "^3"
-	case log15.LvlInfo:
-		cf = "^7"
-	case log15.LvlDebug:
-		cf = "^5"
-	case log15.LvlFine:
-		cf = "^D^7"
-	case log15.LvlFiner:
-		cf = "^D^5"
-	case log15.LvlFinest:
-		cf = "^D^4"
+var (
+	logLevels = map[string]logging.Level{
+		"debug":    logging.DEBUG,
+		"info":     logging.INFO,
+		"notice":   logging.NOTICE,
+		"warning":  logging.WARNING,
+		"error":    logging.ERROR,
+		"critical": logging.CRITICAL,
 	}
-	c.w.Printf(cf+"%s %s ▶^R %s", r.Time.Format(timeFormat), strings.ToUpper(r.Lvl.String()), r.Msg)
-	if len(r.Ctx) > 0 {
-		c.w.Printf("   ^D^7(^R")
-		for i := 0; i < len(r.Ctx); i += 2 {
-			if i > 0 {
-				c.w.Printf(" ")
-			}
-			k, ok := r.Ctx[i].(string)
-			if !ok {
-				c.w.Printf("^1invalidKey^R=%v", r.Ctx[i])
-				continue
-			}
-			c.w.Printf(cf+"%s^R=%s", k, formatLogfmtValue(r.Ctx[i+1]))
-		}
-		c.w.Printf("^D^7)^R")
-	}
-	c.w.Printf("\n")
-	return nil
-}
+)
 
-func LogLevelFlagParser(settings kingpin.Settings) (target *log15.Lvl) {
-	target = new(log15.Lvl)
+type LogLevel logging.Level
+
+func LogLevelFlagParser(settings kingpin.Settings) (target *logging.Level) {
+	target = new(logging.Level)
 	settings.SetValue((*LogLevel)(target))
 	return
 }
 
-func LogLevelFlagParserVar(target *log15.Lvl, settings kingpin.Settings) {
+func LogLevelFlagParserVar(target *logging.Level, settings kingpin.Settings) {
 	settings.SetValue((*LogLevel)(target))
 	return
 }
 
 func (l *LogLevel) String() string {
-	return strings.ToLower(log15.Lvl(*l).String())
+	return strings.ToLower(logging.Level(*l).String())
 }
 
 func (l *LogLevel) Set(v string) error {
-	level, err := log15.LvlFromString(v)
-	if err != nil {
+	level, ok := logLevels[strings.ToLower(v)]
+	if !ok {
 		return fmt.Errorf("invalid log level '%s'", v)
 	}
 	*l = LogLevel(level)
 	return nil
 }
 
-func (l *LogLevel) Level() log15.Lvl {
-	return log15.Lvl(*l)
+func (l *LogLevel) Level() logging.Level {
+	return logging.Level(*l)
 }
 
-func ConfigureLogging(level log15.Lvl, stderr bool, logFile string) {
-	backends := []log15.Handler{}
+func ConfigureLogging(level logging.Level, stderr bool, format string, logFile io.Writer) {
+	backends := []logging.Backend{}
 
 	if stderr {
-		backends = append(backends, NewConsoleLogHandler(os.Stderr))
+		logBackend := logging.NewLogBackend(os.Stderr, "", 0)
+		logBackend.Color = true
+		backends = append(backends, logBackend)
 	}
 
 	if logFile != "" {
-		backends = append(backends, log15.Must.FileHandler(logFile, log15.LogfmtFormat()))
+		fileLogBackend := logging.NewLogBackend(logFile, "", 0)
+		backends = append(backends, fileLogBackend)
 	}
 
-	log15.Root().SetHandler(log15.LvlFilterHandler(level, log15.MultiHandler(backends...)))
+	logging.SetBackend(backends...)
+	logging.SetFormatter(logging.MustStringFormatter(format))
+	logging.SetLevel(level, "")
+
 }
 
 func escapeString(s string) string {
