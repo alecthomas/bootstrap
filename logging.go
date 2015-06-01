@@ -69,7 +69,7 @@ func ConfigureLogging(level logging.Level, stderr bool, format string, logFile i
 		backends = append(backends, logBackend)
 	}
 
-	if logFile != "" {
+	if logFile != nil {
 		fileLogBackend := logging.NewLogBackend(logFile, "", 0)
 		backends = append(backends, fileLogBackend)
 	}
