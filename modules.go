@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/op/go-logging"
+	"github.com/alecthomas/go-logging"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

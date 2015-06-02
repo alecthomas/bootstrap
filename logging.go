@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/op/go-logging"
+	"github.com/alecthomas/go-logging"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
